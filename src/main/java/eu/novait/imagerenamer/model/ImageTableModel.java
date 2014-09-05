@@ -5,6 +5,7 @@
  */
 package eu.novait.imagerenamer.model;
 
+import java.awt.image.BufferedImage;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -96,6 +97,15 @@ public class ImageTableModel extends AbstractTableModel {
     public void removeImageFile(ImageFile imageFile) {
         this.list.remove(imageFile);
         this.fireTableDataChanged();
+    }
+
+    @Override
+    public Class<?> getColumnClass(int columnIndex) {
+        if (columnIndex == ImageTableModel.COLUMN_THUMBNAIL) {
+            return BufferedImage.class;
+        } else {
+            return super.getColumnClass(columnIndex);
+        }
     }
 
 }

@@ -8,6 +8,8 @@ package eu.novait.imagerenamer.gui;
 import eu.novait.imagerenamer.model.ImageFile;
 import eu.novait.imagerenamer.model.ImageTableModel;
 import eu.novait.imagerenamer.util.ImageFileFilter;
+import eu.novait.utilities.gui.table.BufferedImageCellRenderer;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.swing.JFileChooser;
 
@@ -25,6 +27,9 @@ public class MainWindow extends javax.swing.JFrame {
     public MainWindow() {
         initComponents();
         this.imageTableModel = new ImageTableModel();
+        BufferedImageCellRenderer bicr = new BufferedImageCellRenderer();
+        bicr.setRowHeight(200);
+        this.jTable1.setDefaultRenderer(BufferedImage.class, bicr);
         this.jTable1.setModel(imageTableModel);
     }
 
