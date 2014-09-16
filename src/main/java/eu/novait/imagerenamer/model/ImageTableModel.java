@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
@@ -71,6 +72,8 @@ public class ImageTableModel extends AbstractTableModel {
                 }
             case ImageTableModel.COLUMN_FILENAME:
                 return imageFile.getFilename();
+            case ImageTableModel.COLUMN_PROPOSED_FILENAME:
+                return imageFile.getProposedFilename();
             case ImageTableModel.COLUMN_FILEDATE:
                 if (imageFile.getFileCreationDate() != null) {
                     return df.format(imageFile.getFileCreationDate());
@@ -113,6 +116,23 @@ public class ImageTableModel extends AbstractTableModel {
         } else {
             return super.getColumnClass(columnIndex);
         }
+    }
+    
+    public void sortImages(){
+        Comparator comp = new ImageFileComparator();
+        this.list.sort(comp);
+        this.fireTableDataChanged();
+    }
+    
+    public void proposeFileNames(){
+        int idx = 1;
+        for(ImageFile imageFile : this.list){
+            String ext = imageFile.getExtension();
+            String newname = String.format("%04d",idx)+"."+ext;
+            imageFile.setProposedFilename(newname);
+            idx++;
+        }
+        this.markAsChanged();
     }
 
 }

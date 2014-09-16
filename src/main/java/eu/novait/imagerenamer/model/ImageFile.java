@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -38,10 +39,14 @@ public class ImageFile {
     protected Date exifDate;
     protected String thumbnailFilename;
     protected BufferedImage thumbnail;
+    private String extension;
+    private String proposedFilename;
 
     public ImageFile(String filepath) {
         this.filepath = new File(filepath);
         this.filename = this.filepath.getName();
+        this.proposedFilename = "";
+        this.extension = FilenameUtils.getExtension(this.filepath.getName());
         try {
             BasicFileAttributes attr = Files.readAttributes(this.filepath.toPath(), BasicFileAttributes.class);
             this.fileCreationDate = new Date(attr.creationTime().toMillis());
@@ -181,6 +186,34 @@ public class ImageFile {
      */
     public void setThumbnail(BufferedImage thumbnail) {
         this.thumbnail = thumbnail;
+    }
+
+    /**
+     * @return the extension
+     */
+    public String getExtension() {
+        return extension;
+    }
+
+    /**
+     * @param extension the extension to set
+     */
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
+    /**
+     * @return the proposedFilename
+     */
+    public String getProposedFilename() {
+        return proposedFilename;
+    }
+
+    /**
+     * @param proposedFilename the proposedFilename to set
+     */
+    public void setProposedFilename(String proposedFilename) {
+        this.proposedFilename = proposedFilename;
     }
 
 }
