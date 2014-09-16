@@ -10,7 +10,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -91,6 +90,14 @@ public class ImageTableModel extends AbstractTableModel {
 
     public void addImageFile(ImageFile imageFile) {
         this.list.add(imageFile);
+        this.fireTableDataChanged();
+    }
+
+    public void addImageToList(ImageFile imageFile) {
+        this.list.add(imageFile);
+    }
+
+    public void markAsChanged() {
         this.fireTableDataChanged();
     }
 

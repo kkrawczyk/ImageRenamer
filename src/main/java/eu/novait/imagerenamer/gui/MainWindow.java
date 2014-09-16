@@ -19,7 +19,12 @@ import javax.swing.JFileChooser;
  */
 public class MainWindow extends javax.swing.JFrame {
 
+    public static final int STATE_WAITING = 0;
+    public static final int STATE_LOADING = 1;
+    public static final int STATE_RENAMING = 2;
+
     private ImageTableModel imageTableModel;
+    private int currentState = STATE_WAITING;
 
     /**
      * Creates new form MainWindow
@@ -31,6 +36,8 @@ public class MainWindow extends javax.swing.JFrame {
         bicr.setRowHeight(200);
         this.jTable1.setDefaultRenderer(BufferedImage.class, bicr);
         this.jTable1.setModel(imageTableModel);
+        this.setExtendedState(this.getExtendedState() | javax.swing.JFrame.MAXIMIZED_BOTH);
+        this.setCurrentState(STATE_WAITING);
     }
 
     /**
@@ -43,8 +50,12 @@ public class MainWindow extends javax.swing.JFrame {
     private void initComponents() {
 
         jToolBar1 = new javax.swing.JToolBar();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        statusPanel = new javax.swing.JPanel();
+        loaderBar = new javax.swing.JProgressBar();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -52,6 +63,24 @@ public class MainWindow extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jToolBar1.setRollover(true);
+
+        jButton1.setText("Dodaj pliki");
+        jButton1.setFocusable(false);
+        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(jButton1);
+
+        jButton2.setText("Sortuj");
+        jButton2.setFocusable(false);
+        jButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jToolBar1.add(jButton2);
+
         getContentPane().add(jToolBar1, java.awt.BorderLayout.NORTH);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -68,6 +97,11 @@ public class MainWindow extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jTable1);
 
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        statusPanel.setLayout(new java.awt.BorderLayout());
+        statusPanel.add(loaderBar, java.awt.BorderLayout.CENTER);
+
+        getContentPane().add(statusPanel, java.awt.BorderLayout.PAGE_END);
 
         jMenu1.setText("Plik");
 
@@ -87,28 +121,79 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        JFileChooser chooser = new JFileChooser();
+        this.addFilesToList();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        this.addFilesToList();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    protected void addFilesToList() {
+        if (chooser == null) {
+            chooser = new JFileChooser();
+        }
         chooser.addChoosableFileFilter(new ImageFileFilter());
         chooser.setMultiSelectionEnabled(true);
         chooser.setAcceptAllFileFilterUsed(false);
         int returnVal = chooser.showSaveDialog(this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File[] selectedFiles = chooser.getSelectedFiles();
-            for(File f : selectedFiles){
-                ImageFile imageFile = new ImageFile(f.getAbsolutePath());
-                System.out.println(f.getAbsolutePath());
-                this.imageTableModel.addImageFile(imageFile);
-            }
+            this.setCurrentState(STATE_LOADING);
+            Thread addThread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    File[] selectedFiles = chooser.getSelectedFiles();
+                    loaderBar.setMaximum(selectedFiles.length);
+                    loaderBar.setValue(0);
+                    for (File f : selectedFiles) {
+                        ImageFile imageFile = new ImageFile(f.getAbsolutePath());
+                        System.out.println(f.getAbsolutePath());
+                        imageTableModel.addImageToList(imageFile);
+                        loaderBar.setValue(loaderBar.getValue()+1);
+                    }
+                    imageTableModel.markAsChanged();
+                    setCurrentState(STATE_WAITING);
+                }
+            });
+            addThread.start();
         }
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+    }
 
+    public void setCurrentState(int state) {
+        this.currentState = state;
+        switch (this.currentState) {
+            case STATE_LOADING:
+                this.jButton1.setEnabled(false);
+                this.jMenu1.setEnabled(false);
+                this.jTable1.setEnabled(false);
+                this.statusPanel.setVisible(true);
+                break;
+            case STATE_WAITING:
+            default:
+                this.jMenu1.setEnabled(true);
+                this.jButton1.setEnabled(true);
+                this.jTable1.setEnabled(true);
+                this.statusPanel.setVisible(false);
+                this.loaderBar.setValue(0);
+                this.loaderBar.setMaximum(1);
+        }
+    }
 
+    public int getCurrentState() {
+        return this.currentState;
+    }
+
+    private JFileChooser chooser;
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JToolBar jToolBar1;
+    private javax.swing.JProgressBar loaderBar;
+    private javax.swing.JPanel statusPanel;
     // End of variables declaration//GEN-END:variables
 }
