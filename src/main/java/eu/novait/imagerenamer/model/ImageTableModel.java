@@ -31,6 +31,10 @@ public class ImageTableModel extends AbstractTableModel {
         this.list = new ArrayList<>();
     }
 
+    public List<ImageFile> getList() {
+        return this.list;
+    }
+
     @Override
     public String getColumnName(int column) {
         switch (column) {
@@ -117,18 +121,18 @@ public class ImageTableModel extends AbstractTableModel {
             return super.getColumnClass(columnIndex);
         }
     }
-    
-    public void sortImages(){
+
+    public void sortImages() {
         Comparator comp = new ImageFileComparator();
         this.list.sort(comp);
         this.fireTableDataChanged();
     }
-    
-    public void proposeFileNames(){
+
+    public void proposeFileNames() {
         int idx = 1;
-        for(ImageFile imageFile : this.list){
+        for (ImageFile imageFile : this.list) {
             String ext = imageFile.getExtension();
-            String newname = String.format("%04d",idx)+"."+ext;
+            String newname = String.format("%04d", idx) + "." + ext;
             imageFile.setProposedFilename(newname);
             idx++;
         }

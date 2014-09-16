@@ -9,9 +9,13 @@ import eu.novait.imagerenamer.model.ImageFile;
 import eu.novait.imagerenamer.model.ImageTableModel;
 import eu.novait.imagerenamer.util.ImageFileFilter;
 import eu.novait.utilities.gui.table.BufferedImageCellRenderer;
+import java.awt.Component;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -21,7 +25,7 @@ public class MainWindow extends javax.swing.JFrame {
 
     public static final int STATE_WAITING = 0;
     public static final int STATE_LOADING = 1;
-    public static final int STATE_RENAMING = 2;
+    public static final int STATE_SAVING = 2;
 
     private ImageTableModel imageTableModel;
     private int currentState = STATE_WAITING;
@@ -53,6 +57,7 @@ public class MainWindow extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         statusPanel = new javax.swing.JPanel();
@@ -97,6 +102,17 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         jToolBar1.add(jButton3);
+
+        jButton4.setText("Zapisz");
+        jButton4.setFocusable(false);
+        jButton4.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton4.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(jButton4);
 
         getContentPane().add(jToolBar1, java.awt.BorderLayout.NORTH);
 
@@ -153,11 +169,47 @@ public class MainWindow extends javax.swing.JFrame {
         this.imageTableModel.proposeFileNames();
     }//GEN-LAST:event_jButton3ActionPerformed
 
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        this.saveFiles();
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    protected void saveFiles() {
+        if (chooser == null) {
+            chooser = new JFileChooser();
+        }
+        for (FileFilter ff : chooser.getChoosableFileFilters()) {
+            chooser.removeChoosableFileFilter(ff);
+        }
+        chooser.setMultiSelectionEnabled(false);
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        int returnVal = chooser.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            loaderBar.setMaximum(imageTableModel.getRowCount());
+            loaderBar.setValue(0);
+            this.setCurrentState(STATE_SAVING);
+            Thread renameThread = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    File dstDir = chooser.getSelectedFile();
+                    for(ImageFile imageFile : imageTableModel.getList()){
+                        System.out.println(dstDir.getAbsolutePath());
+                        loaderBar.setValue(loaderBar.getValue() + 1);
+                        //FileUtils.copyFile(dstDir, dstDir);
+                    }
+                    setCurrentState(STATE_WAITING);
+                }
+            });
+        }
+    }
+
     protected void addFilesToList() {
         if (chooser == null) {
             chooser = new JFileChooser();
         }
         chooser.addChoosableFileFilter(new ImageFileFilter());
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         chooser.setMultiSelectionEnabled(true);
         chooser.setAcceptAllFileFilterUsed(false);
         int returnVal = chooser.showSaveDialog(this);
@@ -172,9 +224,8 @@ public class MainWindow extends javax.swing.JFrame {
                     loaderBar.setValue(0);
                     for (File f : selectedFiles) {
                         ImageFile imageFile = new ImageFile(f.getAbsolutePath());
-                        System.out.println(f.getAbsolutePath());
                         imageTableModel.addImageToList(imageFile);
-                        loaderBar.setValue(loaderBar.getValue()+1);
+                        loaderBar.setValue(loaderBar.getValue() + 1);
                     }
                     imageTableModel.markAsChanged();
                     setCurrentState(STATE_WAITING);
@@ -188,7 +239,10 @@ public class MainWindow extends javax.swing.JFrame {
         this.currentState = state;
         switch (this.currentState) {
             case STATE_LOADING:
-                this.jButton1.setEnabled(false);
+            case STATE_SAVING:
+                for (Component c : this.jToolBar1.getComponents()) {
+                    c.setEnabled(false);
+                }
                 this.jMenu1.setEnabled(false);
                 this.jTable1.setEnabled(false);
                 this.statusPanel.setVisible(true);
@@ -196,7 +250,9 @@ public class MainWindow extends javax.swing.JFrame {
             case STATE_WAITING:
             default:
                 this.jMenu1.setEnabled(true);
-                this.jButton1.setEnabled(true);
+                for (Component c : this.jToolBar1.getComponents()) {
+                    c.setEnabled(true);
+                }
                 this.jTable1.setEnabled(true);
                 this.statusPanel.setVisible(false);
                 this.loaderBar.setValue(0);
@@ -213,6 +269,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
